@@ -1,21 +1,144 @@
 package genaiprices
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 	"time"
 )
 
-// calcPrice / getActiveModelPrice are stubbed here; price calculation is
-// implemented in a following commit. This commit covers provider/model
-// resolution.
-
-func calcPrice(usage Usage, mp ModelPrice) (inputPrice, outputPrice, totalPrice float64, err error) {
-	return 0, 0, 0, nil
+// calcMtokPrice computes the price for tokens of one bucket. A nil price means
+// the bucket is unpriced (0). Tiered prices use threshold (cliff) pricing keyed
+// on totalInputTokens: the highest tier whose start is below the total wins and
+// is applied to ALL tokens of this bucket.
+func calcMtokPrice(p *Price, tokens int, totalInputTokens int) float64 {
+	if p == nil || tokens <= 0 {
+		return 0
+	}
+	if p.Tiered == nil {
+		return p.Flat * float64(tokens) / 1_000_000
+	}
+	applicable := p.Tiered.Base
+	for _, tier := range p.Tiered.Tiers {
+		if totalInputTokens > tier.Start {
+			applicable = tier.Price
+		}
+	}
+	return applicable * float64(tokens) / 1_000_000
 }
 
+// calcPrice computes input, output and total prices for usage under modelPrice.
+// It mirrors packages/js/src/engine.ts:calcPrice, including the token-bucket
+// deduplication that prevents double-charging tokens reported in inclusive
+// parent/child buckets (e.g. cached audio counted in input, cache_read and
+// input_audio simultaneously).
+func calcPrice(usage Usage, mp ModelPrice) (inputPrice, outputPrice, totalPrice float64, err error) {
+	totalInputTokens := usage.InputTokens
+
+	cacheReadTokens := usage.CacheReadTokens
+	cacheWriteTokens := usage.CacheWriteTokens
+	cacheAudioReadTokens := usage.CacheAudioReadTokens
+	inputAudioTokens := usage.InputAudioTokens
+	outputAudioTokens := usage.OutputAudioTokens
+
+	pricedCacheAudioReadTokens := 0
+	if mp.CacheAudioReadMTok != nil {
+		pricedCacheAudioReadTokens = cacheAudioReadTokens
+	}
+	cacheAudioReadAsCacheRead := 0
+	if mp.CacheAudioReadMTok == nil && mp.CacheReadMTok != nil {
+		cacheAudioReadAsCacheRead = cacheAudioReadTokens
+	}
+
+	pricedAudioInputTokens := 0
+	if mp.InputAudioMTok != nil {
+		pricedAudioInputTokens = inputAudioTokens - pricedCacheAudioReadTokens - cacheAudioReadAsCacheRead
+	}
+	if pricedAudioInputTokens < 0 {
+		return 0, 0, 0, errors.New("genaiprices: cache_audio_read_tokens cannot be greater than input_audio_tokens")
+	}
+
+	pricedCacheReadTokens := 0
+	if mp.CacheReadMTok != nil {
+		pricedCacheReadTokens = cacheReadTokens - pricedCacheAudioReadTokens
+	}
+	if pricedCacheReadTokens < 0 {
+		return 0, 0, 0, errors.New("genaiprices: cache_audio_read_tokens cannot be greater than cache_read_tokens")
+	}
+
+	pricedCacheWriteTokens := 0
+	if mp.CacheWriteMTok != nil {
+		pricedCacheWriteTokens = cacheWriteTokens
+	}
+
+	pricedTextInputTokens := 0
+	if mp.InputMTok != nil {
+		pricedTextInputTokens = totalInputTokens - pricedCacheReadTokens - pricedCacheWriteTokens -
+			pricedAudioInputTokens - pricedCacheAudioReadTokens
+	}
+	if pricedTextInputTokens < 0 {
+		return 0, 0, 0, errors.New("genaiprices: uncached text input tokens cannot be negative")
+	}
+
+	inputPrice += calcMtokPrice(mp.InputMTok, pricedTextInputTokens, totalInputTokens)
+	inputPrice += calcMtokPrice(mp.CacheReadMTok, pricedCacheReadTokens, totalInputTokens)
+	inputPrice += calcMtokPrice(mp.CacheWriteMTok, pricedCacheWriteTokens, totalInputTokens)
+	inputPrice += calcMtokPrice(mp.InputAudioMTok, pricedAudioInputTokens, totalInputTokens)
+	inputPrice += calcMtokPrice(mp.CacheAudioReadMTok, pricedCacheAudioReadTokens, totalInputTokens)
+
+	pricedTextOutputTokens := 0
+	if mp.OutputMTok != nil {
+		pricedTextOutputTokens = usage.OutputTokens
+		if mp.OutputAudioMTok != nil {
+			pricedTextOutputTokens -= outputAudioTokens
+		}
+	}
+	if pricedTextOutputTokens < 0 {
+		return 0, 0, 0, errors.New("genaiprices: output_audio_tokens cannot be greater than output_tokens")
+	}
+	outputPrice += calcMtokPrice(mp.OutputMTok, pricedTextOutputTokens, totalInputTokens)
+	outputPrice += calcMtokPrice(mp.OutputAudioMTok, outputAudioTokens, totalInputTokens)
+
+	totalPrice = inputPrice + outputPrice
+	if mp.RequestsKCount != nil {
+		totalPrice += *mp.RequestsKCount / 1000
+	}
+	return inputPrice, outputPrice, totalPrice, nil
+}
+
+// getActiveModelPrice selects the active price for a model at ts. Conditional
+// prices are tried last to first; a nil constraint or a satisfied constraint
+// wins. If none match, the first price is used as a fallback.
 func getActiveModelPrice(model *ModelInfo, ts time.Time) ModelPrice {
-	return ModelPrice{}
+	prices := model.Prices
+	if len(prices) == 0 {
+		return ModelPrice{}
+	}
+	for i := len(prices) - 1; i >= 0; i-- {
+		cond := prices[i]
+		c := cond.Constraint
+		if c == nil {
+			return cond.Prices
+		}
+		if c.Kind == "start_date" {
+			if !ts.Before(c.StartDate) {
+				return cond.Prices
+			}
+			continue
+		}
+		// time_of_date: compare UTC "HH:MM:SS", handling midnight wrap.
+		t := ts.UTC().Format("15:04:05")
+		if c.EndTime < c.StartTime {
+			if t >= c.StartTime || t < c.EndTime {
+				return cond.Prices
+			}
+		} else {
+			if t >= c.StartTime && t < c.EndTime {
+				return cond.Prices
+			}
+		}
+	}
+	return prices[0].Prices
 }
 
 // findProviderByID resolves a provider by its id (exact, normalized) and then
