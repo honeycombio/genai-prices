@@ -2,6 +2,7 @@
 /prices/helicone_get/
 /prices/*.json
 /prices/providers/.schema.json
+/packages/go/data.json
 /.html_cache/
 /htmlcov/
 /tests/cassettes/
