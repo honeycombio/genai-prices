@@ -1,5 +1,6 @@
 import json
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import TypeAlias
@@ -11,6 +12,14 @@ def package_data():
     data_path = this_package_dir / 'data.json'
     package_python_data(data_path)
     package_ts_data(data_path)
+    package_go_data(data_path)
+
+
+def package_go_data(data_path: Path):
+    """Copy the bundled price catalog into the Go package for `//go:embed`."""
+    data_go = root_dir / 'packages' / 'go' / 'data.json'
+    shutil.copyfile(data_path, data_go)
+    print(f'Data successfully written to {data_go.relative_to(root_dir)}')
 
 
 def package_python_data(data_path: Path):
