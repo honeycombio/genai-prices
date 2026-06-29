@@ -41,7 +41,7 @@
 
 The following providers are currently supported:
 
-[comment]: <> 'providers-start'
+[comment]: <> (providers-start)
 
 - [Anthropic](prices/providers/anthropic.yml) - 21 models
 - [Avian](prices/providers/avian.yml) - 4 models
@@ -77,7 +77,7 @@ The following providers are currently supported:
 - [X AI](prices/providers/x_ai.yml) - 16 models
 - [Zhipu AI](prices/providers/zhipuai.yml) - 12 models
 
-[comment]: <> 'providers-end'
+[comment]: <> (providers-end)
 
 ## Usage
 
