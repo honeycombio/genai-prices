@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # This is a release *detector*, not a real dependency: we want the PR
+  # immediately and a human reviews before any actual sync, so a cooldown would
+  # only delay the signal.
+  - package-ecosystem: "pip" # zizmor: ignore[dependabot-cooldown]
+    directory: "/.github/upstream-watch"
+    schedule:
+      interval: "daily"
+    labels:
+      - "upstream-release"
+    commit-message:
+      prefix: "sync"
+    # only dep here is the upstream mirror; its bump = release signal
+    allow:
+      - dependency-name: "genai-prices"
