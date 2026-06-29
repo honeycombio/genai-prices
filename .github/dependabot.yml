@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/.github/upstream-watch"
+    schedule:
+      interval: "daily"
+    labels:
+      - "upstream-release"
+    commit-message:
+      prefix: "sync"
+    # only dep here is the upstream mirror; its bump = release signal
+    allow:
+      - dependency-name: "genai-prices"

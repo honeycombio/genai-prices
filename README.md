@@ -1,3 +1,11 @@
+<!-- fork-note:start -->
+> **Maintainers — upstream sync via Dependabot.** A Dependabot PR labelled
+> `upstream-release` against `.github/upstream-watch/requirements.txt` signals a new
+> [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) release. When handling
+> it, check whether `prices/data.schema.json` changed or upstream shipped bug fixes — if so,
+> the Go implementation in `packages/go/` must be updated to match before merging.
+<!-- fork-note:end -->
+
 <div align="center">
   <h1>GenAI Prices</h1>
 </div>
