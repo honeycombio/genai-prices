@@ -1,0 +1,66 @@
+name: Upstream data diff
+
+# On Dependabot's upstream-release PRs (which bump the genai-prices pin in
+# upstream-watch/requirements.txt), diff prices/data.schema.json and
+# prices/data.json between the old and new upstream versions and post the result
+# as a sticky PR comment, so a maintainer can see at a glance whether a schema
+# change requires updating the Go implementation in packages/go/.
+#
+# pull_request_target is required because Dependabot-triggered workflows get a
+# read-only token with no write access; we never check out or run PR-head code
+# (only the two version strings from fetch-metadata are used), so this is safe.
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      old:
+        description: "Old upstream version (e.g. 0.0.66)"
+        required: true
+      new:
+        description: "New upstream version (e.g. 0.0.67)"
+        required: true
+      pr:
+        description: "PR number to comment on (optional)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  diff:
+    # Auto-run only on Dependabot's labelled upstream-release PRs; always run on
+    # manual dispatch.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.actor == 'dependabot[bot]' &&
+       contains(github.event.pull_request.labels.*.name, 'upstream-release'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      # Checks out the base ref (default for pull_request_target) — we only need
+      # the script from the base branch, never PR-head content.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Extract Dependabot versions
+        id: meta
+        if: github.event_name == 'pull_request_target'
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Diff upstream data and comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pass everything via env (not ${{ }} inline) to avoid shell injection.
+          OLD: ${{ github.event_name == 'workflow_dispatch' && inputs.old || steps.meta.outputs.previous-version }}
+          NEW: ${{ github.event_name == 'workflow_dispatch' && inputs.new || steps.meta.outputs.new-version }}
+          PR: ${{ github.event_name == 'workflow_dispatch' && inputs.pr || github.event.pull_request.number }}
+        run: |
+          if [ -z "$OLD" ] || [ -z "$NEW" ]; then
+            echo "No version pair to compare (dependency-name != genai-prices?); skipping."
+            exit 0
+          fi
+          args=("$OLD" "$NEW")
+          [ -n "$PR" ] && args+=(--pr "$PR")
+          ./scripts/upstream-data-diff.sh "${args[@]}"
