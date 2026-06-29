@@ -1,9 +1,11 @@
 <!-- fork-note:start -->
+
 > **Maintainers — upstream sync via Dependabot.** A Dependabot PR labelled
 > `upstream-release` against `.github/upstream-watch/requirements.txt` signals a new
 > [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) release. When handling
 > it, check whether `prices/data.schema.json` changed or upstream shipped bug fixes — if so,
 > the Go implementation in `packages/go/` must be updated to match before merging.
+
 <!-- fork-note:end -->
 
 <div align="center">
@@ -39,7 +41,7 @@
 
 The following providers are currently supported:
 
-[comment]: <> (providers-start)
+[comment]: <> 'providers-start'
 
 - [Anthropic](prices/providers/anthropic.yml) - 21 models
 - [Avian](prices/providers/avian.yml) - 4 models
@@ -75,7 +77,7 @@ The following providers are currently supported:
 - [X AI](prices/providers/x_ai.yml) - 16 models
 - [Zhipu AI](prices/providers/zhipuai.yml) - 12 models
 
-[comment]: <> (providers-end)
+[comment]: <> 'providers-end'
 
 ## Usage
 
