@@ -59,4 +59,4 @@ jobs:
           fi
           args=("$NEW")
           [ -n "$PR" ] && args+=("$PR")
-          bash packages/go/cmd/upstream-data-diff/upstream-data-diff.sh "${args[@]}"
+          bash packages/go/upstream-data-diff.sh "${args[@]}"
