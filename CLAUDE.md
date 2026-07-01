@@ -26,9 +26,9 @@ maintains is:
   usage extraction (the port of upstream logic).
 - `genaiprices.go` — public API (`CalcPrice`, `FindProvider`, `ExtractUsage`).
 - `genaiprices_test.go` — smoke test exercising the embedded data end to end.
-- `upstream-data-diff.sh` — reports whether upstream's schema changed (part of the sync tooling
-  being reworked separately — see below).
-- `SYNCING.md` — the upstream-sync runbook (out of date after this strip — see below).
+- `sync-upstream-data.sh` — refreshes the two vendored files from an upstream release.
+- `upstream-data-diff.sh` — reports whether upstream's schema changed vs. our vendored copy.
+- `SYNCING.md` — the upstream-sync runbook.
 
 ## Development Commands
 
@@ -45,14 +45,11 @@ There is no Makefile, no `uv`, and no Node tooling in this fork.
 
 ## Syncing with upstream
 
-Dependabot opens an `upstream-release` PR (via `upstream-watch/requirements.txt`) when
-`pydantic/genai-prices` publishes a newer version, and the "Upstream data diff" workflow
-(`.github/workflows/upstream-data-diff.yml`) comments whether the schema changed.
-
-> **Syncing is being reworked in a separate PR.** This strip removed the Python build pipeline
-> (`make package-data`) that `SYNCING.md` and `upstream-data-diff.sh` were written around, so they
-> reference paths (`prices/…`) that no longer exist. Don't rely on that tooling until the follow-up
-> lands; for now, refresh `packages/go/data.json` and `data.schema.json` from upstream by hand.
+- `upstream-watch/requirements.txt` pins the last upstream version synced. Dependabot opens an
+  `upstream-release` PR when `pydantic/genai-prices` publishes a newer version; the "Upstream data
+  diff" workflow (`.github/workflows/upstream-data-diff.yml`) comments whether the schema changed.
+- To sync: run `packages/go/sync-upstream-data.sh <version>`, review the diff, update the Go structs
+  if `data.schema.json` changed, then `go test ./...`. Full runbook: `packages/go/SYNCING.md`.
 
 ## Important Notes
 
