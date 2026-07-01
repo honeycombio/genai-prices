@@ -37,19 +37,16 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      # Checks out the base ref (default for pull_request_target) — we only need
-      # the schema file from the base branch, never PR-head content.
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@v7.0.0
 
       - name: Extract Dependabot versions
         id: meta
         if: github.event_name == 'pull_request_target'
-        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        uses: dependabot/fetch-metadata@v3
 
       - name: Diff upstream schema and comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Pass everything via env (not ${{ }} inline) to avoid shell injection.
           NEW: ${{ github.event_name == 'workflow_dispatch' && inputs.new || steps.meta.outputs.new-version }}
           PR: ${{ github.event_name == 'workflow_dispatch' && inputs.pr || github.event.pull_request.number }}
         run: |
