@@ -28,11 +28,9 @@ go get github.com/honeycombio/genai-prices/packages/go
 
 Dependabot watches upstream releases (via [`upstream-watch/requirements.txt`](upstream-watch/requirements.txt))
 and opens an `upstream-release` PR when `pydantic/genai-prices` publishes a new version. A CI
-workflow then reports whether the price-data schema changed.
-
-> **Note:** the sync tooling ([`packages/go/SYNCING.md`](packages/go/SYNCING.md),
-> `upstream-data-diff.sh`) still assumes the old full-fork layout and is being reworked in a
-> separate PR after this strip.
+workflow then reports whether the price-data schema changed. The full maintainer runbook — how to
+refresh the two vendored files and update the Go structs — is in
+[`packages/go/SYNCING.md`](packages/go/SYNCING.md).
 
 ## ⚠️ Warning: these prices will not be 100% accurate
 
