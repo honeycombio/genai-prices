@@ -4,7 +4,10 @@ updates:
   # immediately and a human reviews before any actual sync, so a cooldown would
   # only delay the signal.
   - package-ecosystem: "pip" # zizmor: ignore[dependabot-cooldown]
-    directory: "/.github/upstream-watch"
+    # Must live OUTSIDE .github/: Dependabot's app token can't push commits that
+    # modify files under .github/, which fails PR creation with a 400
+    # "invalid or unauthorized changes" (reported as dependency_file_not_supported).
+    directory: "/upstream-watch"
     schedule:
       interval: "daily"
     labels:
