@@ -2,8 +2,7 @@
 
 Go package for calculating LLM inference API prices, a port of the Python and
 JavaScript [`genai-prices`](https://github.com/pydantic/genai-prices) packages.
-It shares the same bundled price catalog (`prices/data.json`), embedded at
-compile time via `//go:embed`.
+It embeds upstream's price catalog (`data.json`) at compile time via `//go:embed`.
 
 ## Install
 
@@ -91,5 +90,5 @@ calc, _ := genaiprices.CalcPrice(extracted.Usage, extracted.Model.ID,
 - Prices use `float64`, matching the JavaScript engine.
 - Tiered pricing is threshold-based (cliff): crossing a tier applies that rate to
   all tokens of that bucket.
-- `data.json` is generated — DO NOT edit it directly. It is refreshed from
-  `prices/data.json` by `make package-data`.
+- `data.json` is vendored from upstream — DO NOT edit it directly. Refresh it with
+  [`sync-upstream-data.sh`](./sync-upstream-data.sh) (see [SYNCING.md](./SYNCING.md)).

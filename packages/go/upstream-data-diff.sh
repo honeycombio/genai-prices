@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Diffs prices/data.schema.json between two upstream (pydantic/genai-prices) release
-# versions and renders a markdown report.
+# Diffs the price-data schema between our vendored copy (packages/go/data.schema.json)
+# and an upstream (pydantic/genai-prices) release version, then renders a markdown report.
+#
+# Upstream keeps the schema at prices/data.schema.json; we vendor it into packages/go/.
 #
 # Usage: upstream-data-diff.sh <new-version> [<pr-number>]
 #
@@ -11,6 +13,8 @@ set -uo pipefail
 
 UPSTREAM_REPO="${UPSTREAM_REPO:-pydantic/genai-prices}"
 SCHEMA="data.schema.json"
+LOCAL_SCHEMA="packages/go/$SCHEMA"       # our vendored copy
+UPSTREAM_SCHEMA="prices/$SCHEMA"         # where it lives in upstream's tree
 
 usage() { printf 'usage: %s <new-version> [<pr-number>]\n' "$0" >&2; exit 2; }
 
@@ -31,11 +35,11 @@ deliver() {
 }
 
 build_err=""
-report="Comparing current \`prices/${SCHEMA}\` with upstream \`v${new_v}\`."$'\n\n'
-report+="### \`prices/${SCHEMA}\`"$'\n\n'
+report="Comparing our vendored \`${LOCAL_SCHEMA}\` with upstream \`${UPSTREAM_SCHEMA}\` at \`v${new_v}\`."$'\n\n'
+report+="### \`${SCHEMA}\`"$'\n\n'
 
-schema_old=$(cat "prices/$SCHEMA" 2>/dev/null); old_ok=$?
-schema_new=$(gh api "repos/$UPSTREAM_REPO/contents/prices/$SCHEMA?ref=v$new_v" \
+schema_old=$(cat "$LOCAL_SCHEMA" 2>/dev/null); old_ok=$?
+schema_new=$(gh api "repos/$UPSTREAM_REPO/contents/$UPSTREAM_SCHEMA?ref=v$new_v" \
   -H "Accept: application/vnd.github.raw" 2>/dev/null); new_ok=$?
 
 if [[ $old_ok -ne 0 || $new_ok -ne 0 ]]; then

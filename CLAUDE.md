@@ -4,94 +4,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is the GenAI Prices project - a database and tools for calculating LLM inference API pricing. The project includes:
+This is a **stripped-down fork** of [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices).
+Upstream's Python package, JavaScript/TypeScript package, price-source YAMLs, and build pipeline
+have all been removed to minimise the dependency/vulnerability surface. The entire delta this fork
+maintains is:
 
-- **Price Data**: YAML files in `prices/providers/` with pricing information for 16+ LLM providers
-- **Python Package**: Located in `packages/python/` - a Python library for calculating costs
-- **Data Pipeline**: Tools to build JSON schemas, validate data, and update from external sources
-- **Price Sources**: Integration with Helicone, OpenRouter, LiteLLM, and other pricing sources
+- **`packages/go/`** — a Go package that calculates LLM inference prices (a hand-written port of
+  upstream's Python/JS engine).
+- Two vendored data files it depends on, tracked from upstream.
 
 ## Architecture
 
-### Core Components
+### Key files (all under `packages/go/`)
 
-1. **Price Data Sources** (`prices/providers/*.yml`): YAML files containing model pricing information for each provider
-2. **Data Pipeline** (`prices/src/prices/`): Python modules that build, validate, and process pricing data
-3. **Python Package** (`packages/python/`): Published package for end users to calculate costs
-4. **External Data Integration**: Tools to pull and compare prices from external sources
-
-### Key Directories
-
-- `prices/`: Core pricing data and build tools
-  - `providers/`: YAML files with provider-specific pricing
-  - `src/prices/`: Python package for data processing
-  - `data.json` and `data_slim.json`: Built JSON files (DO NOT EDIT DIRECTLY)
-- `packages/python/`: Published Python package for users
-- `tests/`: Python Test suite
-- `scratch/`: Development/testing files IGNORE THESE FILES
+- `data.json` — full price catalog vendored from upstream, embedded at compile time via
+  `//go:embed` (see `data.go`). **DO NOT edit directly** — it is refreshed from upstream.
+- `data.schema.json` — upstream's JSON Schema for the catalog. Not imported by any code; kept
+  purely as a **change signal** for when the Go structs need updating.
+- `types.go` — hand-written structs the catalog decodes into.
+- `engine.go` / `match.go` / `extract.go` — the pricing engine, provider/model matching, and
+  usage extraction (the port of upstream logic).
+- `genaiprices.go` — public API (`CalcPrice`, `FindProvider`, `ExtractUsage`).
+- `genaiprices_test.go` — smoke test exercising the embedded data end to end.
+- `sync-upstream-data.sh` — refreshes the two vendored files from an upstream release.
+- `upstream-data-diff.sh` — reports whether upstream's schema changed vs. our vendored copy.
+- `SYNCING.md` — the upstream-sync runbook.
 
 ## Development Commands
 
-### Setup
+Everything is standard Go, run from `packages/go/`:
 
 ```bash
-make install      # Install dependencies and pre-commit hooks
-make sync         # Update local packages and uv.lock
+cd packages/go
+go vet ./...       # static checks
+go test ./...      # run tests (parses + prices against the embedded data.json)
+go build ./...     # build
 ```
 
-### Core Development
+There is no Makefile, no `uv`, and no Node tooling in this fork.
 
-```bash
-make format       # Format code with ruff
-make lint         # Check code style and linting
-make typecheck    # Run static type checking with basedpyright
-make test         # Run tests with coverage
-make testcov      # Run tests and generate HTML coverage report
-```
+## Syncing with upstream
 
-### Building and Data Processing
-
-```bash
-make build-prices # Build JSON schema and validate/write data to prices/data.json
-make package-data # Prepare data for packages
-```
-
-### Price Data Management
-
-```bash
-make get-all-prices                    # Download prices from all external sources
-make helicone-get                      # Get Helicone prices
-make openrouter-get                    # Get OpenRouter prices
-make litellm-get                       # Get LiteLLM prices
-make simonw-prices-get                 # Get Simon Willison's prices
-make get-update-price-discrepancies    # Download and update price discrepancies
-make check-for-price-discrepancies     # Check for price discrepancies
-```
+- `upstream-watch/requirements.txt` pins the last upstream version synced. Dependabot opens an
+  `upstream-release` PR when `pydantic/genai-prices` publishes a newer version; the "Upstream data
+  diff" workflow (`.github/workflows/upstream-data-diff.yml`) comments whether the schema changed.
+- To sync: run `packages/go/sync-upstream-data.sh <version>`, review the diff, update the Go structs
+  if `data.schema.json` changed, then `go test ./...`. Full runbook: `packages/go/SYNCING.md`.
 
 ## Important Notes
 
-### Pricing Data
-
-- **NEVER** edit `prices/data.json` or `prices/data_slim.json` directly - they are generated files
-- When updating prices in YAML files, always update the `prices_checked` field to current date
-- Add `price_comments` to explain changes and provide references
-- URLs for `data.json` and `data_slim.json` must not change (used by auto-update feature)
-
-### Development Workflow
-
-- Use `uv` for dependency management (not pip/conda)
-- Pre-commit hooks will automatically update JSON files when YAML prices change
-- Run `make build` after editing provider YAML files
-- Always run the full test suite before submitting changes
-
-### Testing
-
-- Tests use pytest with coverage reporting
-- Test files are in `tests/` directory
-- Use `make test-all-python` to test across Python 3.10-3.13
-
-### Code Style
-
-- Code formatted with ruff (single quotes, 120 char line length)
-- Type checking with basedpyright in strict mode
-- Follow existing patterns in the codebase
+- **DO NOT edit `packages/go/data.json` by hand** — it is vendored from upstream. Change it only via
+  `sync-upstream-data.sh`.
+- The Go code is a **port**; upstream's reference implementation is no longer in this repo. When
+  upstream changes pricing *logic* (not just data shape), review upstream's source on GitHub and
+  port the change into `packages/go/`. See the "Engine behavior" note in `SYNCING.md`.
+- The module path is `github.com/honeycombio/genai-prices/packages/go`.
