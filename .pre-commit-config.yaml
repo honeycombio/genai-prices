@@ -6,7 +6,9 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: end-of-file-fixer
+        exclude: ^prices/.*\.json$
       - id: trailing-whitespace
+        exclude: ^prices/.*\.json$
 
   - repo: https://github.com/sirosen/texthooks
     rev: 0.7.1
@@ -16,7 +18,7 @@ repos:
       - id: fix-ligatures
 
   - repo: https://github.com/codespell-project/codespell
-    # Configuration for codespell is in pyproject.toml
+    # Configuration for codespell is in .codespellrc
     rev: v2.4.2
     hooks:
       - id: codespell
@@ -30,74 +32,15 @@ repos:
 
   - repo: local
     hooks:
-      - id: format-python
-        name: format python
-        entry: make
-        args: [format]
+      - id: go-fmt
+        name: go fmt
+        entry: bash -c 'cd packages/go && test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)'
         language: system
-        types: [python]
+        files: ^packages/go/.*\.go$
         pass_filenames: false
-      - id: prettier
-        name: prettier
-        entry: npx
-        args: [prettier, --write, --ignore-unknown]
+      - id: go-vet
+        name: go vet
+        entry: bash -c 'cd packages/go && go vet ./...'
         language: system
-      - id: lint-fix
-        name: lint fix
-        entry: npm
-        args: [run, lint-fix]
-        files: "packages/js/"
-        types_or: [ts, javascript]
-        language: system
-        pass_filenames: false
-      - id: lint-python
-        name: lint python
-        entry: make
-        args: [lint]
-        types: [python]
-        language: system
-        pass_filenames: false
-      - id: collapse-models
-        name: collapse models
-        entry: make
-        args: [collapse-models]
-        files: "prices/providers/"
-        language: system
-        pass_filenames: false
-      - id: build
-        name: build prices
-        entry: make
-        args: [build]
-        files: "prices/"
-        language: system
-        pass_filenames: false
-      - id: check-for-price-discrepancies
-        name: check for price discrepancies
-        entry: make
-        args: [check-for-price-discrepancies]
-        types: [yaml]
-        files: "prices/"
-        language: system
-        pass_filenames: false
-      - id: inject-providers
-        name: inject providers into README.md
-        entry: make
-        args: [inject-providers]
-        types: [yaml]
-        files: "prices/"
-        language: system
-        pass_filenames: false
-      - id: typecheck-python
-        name: typecheck python
-        entry: make
-        args: [typecheck]
-        language: system
-        types: [python]
-        pass_filenames: false
-      - id: typecheck-ts
-        name: typecheck typescript
-        entry: npm
-        args: [run, typecheck]
-        language: system
-        types: [ts]
+        files: ^packages/go/.*\.go$
         pass_filenames: false
