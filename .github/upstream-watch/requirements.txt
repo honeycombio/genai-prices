@@ -1,4 +1,4 @@
 # Pin tracks the last upstream genai-prices version this fork synced to.
 # Dependabot opens a PR here when pydantic publishes a newer PyPI release —
 # the signal to run a manual upstream sync (see RELEASE.md). Nothing imports this.
-genai-prices==0.0.66
+genai-prices==0.0.67
