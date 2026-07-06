@@ -1,17 +1,15 @@
-# Syncing this fork with upstream
+# Syncing price data from upstream
 
-`honeycombio/genai-prices` is a fork of [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices).
-Our **entire delta is this Go package** (`packages/go/`) plus a few small hooks that keep
-its embedded data current:
+`honeycombio/genai-prices` is a standalone Go library. It is **not** maintained as a fork
+of [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) — the Go
+implementation lives here, and the only things we take from upstream are the compiled
+price data files and their schemas:
 
-- `packages/go/*` — net-new, never conflicts.
-- `prices/src/prices/package_data.py` (`package_go_data`) — copies `prices/data.json`
-  into `packages/go/data.json` during `make package-data`.
-- `.github/workflows/ci.yml` (`test-go` job), root `README.md`, `.prettierignore` — small
-  additions.
+- `prices/data.json` / `prices/data.schema.json`
+- `prices/data_slim.json` / `prices/data_slim.schema.json`
+- `packages/go/data.json` — a copy of `prices/data.json`, embedded via `//go:embed`
 
-Everything else — all price YAMLs, `prices/data.json`, the Python/JS packages — comes
-straight from upstream and we never hand-edit it.
+We never hand-edit these; the build pipeline that produces them lives upstream.
 
 ## 0. Get notified
 
@@ -21,48 +19,32 @@ upstream version we synced to. Dependabot checks it daily and opens a PR labelle
 comments on that PR with whether `prices/data.schema.json` changed — a schema change means
 the Go structs below likely need updating.
 
-## 1. Rebase our change onto the latest upstream
+## 1. Pull the refreshed data
 
-We keep the Go layer as a **clean patch replayed on top of `upstream/main`**, so history
-stays linear. Do this on a branch — land it via PR review (step 5), don't push straight to
-`main`.
-
-```bash
-# one-time
-git remote add upstream git@github.com:pydantic/genai-prices.git
-
-# start from a clean tree — commit or stash local work
-git stash
-
-git fetch upstream
-git switch -c yingrong/sync-upstream main
-git rebase upstream/main
-#    Expected conflicts ONLY in: .github/workflows/ci.yml, README.md,
-#    prices/src/prices/package_data.py — keep BOTH sides (our additions + upstream).
-#    Price YAMLs and prices/data.json apply clean. Resolve -> git add -> git rebase --continue.
-```
-
-## 2. Rebuild and commit the refreshed data separately
+Fetch the data files from the upstream release tag (same mechanism as
+[`upstream-data-diff.sh`](upstream-data-diff.sh)) on a branch:
 
 ```bash
-make build
+NEW=<new-version>   # e.g. 0.0.67
+git switch -c yingrong/sync-upstream-$NEW main
+
+for f in data.json data.schema.json data_slim.json data_slim.schema.json; do
+  gh api "repos/pydantic/genai-prices/contents/prices/$f?ref=v$NEW" \
+    -H "Accept: application/vnd.github.raw" > "prices/$f"
+done
+cp prices/data.json packages/go/data.json
+
+git add prices/ packages/go/data.json
+git commit -m "sync: refresh price data from upstream v$NEW"
 ```
 
-If `packages/go/data.json` changed, commit that on its own, after the rebase — don't fold
-it into the replayed upstream commits:
-
-```bash
-git add packages/go/data.json
-git commit -m "sync(go): refresh embedded data.json from upstream <new-version>"
-```
-
-## 3. Check for schema drift
+## 2. Check for schema drift
 
 The Dependabot PR comment (step 0) already told you whether `prices/data.schema.json`
 changed. Confirm locally:
 
 ```bash
-git diff upstream/main -- prices/data.schema.json
+git diff main -- prices/data.schema.json
 ```
 
 - **No diff** — the data format is unchanged; the Go structs are still valid. Continue.
@@ -78,46 +60,20 @@ instead: `init()` in `data.go` panics, and the custom `UnmarshalJSON` in `match.
 rejects unknown match operators. Only silent additive/rename drift needs the manual check
 above.
 
-## 4. Verify
+## 3. Verify
 
 ```bash
-cd packages/go && go vet ./... && go test ./...
-cd ../.. && make test   # python suite
+make lint test   # gofmt + go vet + go test
 ```
 
-## 5. Open a PR for review
+## 4. Bump the tracked version and open a PR
 
 ```bash
-git push -u origin yingrong/sync-upstream
-gh pr create --base main --title "sync: pull upstream <new-version>" --body "..."
-```
-
-The diff includes all of upstream's changes plus ours — scope review to `packages/go/`
-(the rest is just upstream's own commits replayed unchanged). Wait for CI (incl.
-`test-go`) and approval.
-
-**Don't merge via GitHub's UI** — "Rebase and merge" (or squash/merge commit) re-SHAs the
-commits, so local `main` won't byte-match what was reviewed and the linear-history
-property breaks. Once approved, land it manually instead:
-
-```bash
-git switch main
-git rebase yingrong/sync-upstream   # main == upstream/main + Go-layer commits on top
-git push --force-with-lease origin main
-```
-
-GitHub detects the commits landing on `main` and marks the PR merged automatically. Cut a
-fresh release tag here if shipping a new Go module version.
-
-## 6. Bump the tracked version
-
-```bash
-git switch -c yingrong/bump-genai-prices main
 $EDITOR upstream-watch/requirements.txt   # genai-prices==<new-version>
-git commit -am "sync: bump genai-prices to <new-version>"
-git push -u origin yingrong/bump-genai-prices
-gh pr create --base main --title "sync: bump genai-prices to <new-version>" --body "..."
+git commit -am "sync: bump genai-prices to $NEW"
+git push -u origin yingrong/sync-upstream-$NEW
+gh pr create --base main --title "sync: pull upstream v$NEW price data" --body "..."
 ```
 
-Merge normally once approved (this one has no history constraints — squash/merge commit
-is fine). Stops Dependabot from re-flagging the version you just synced.
+Merge normally once approved. Bumping the pin stops Dependabot from re-flagging the
+version you just synced, and closes its `upstream-release` PR.
