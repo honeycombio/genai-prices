@@ -1,21 +1,12 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# Go
+*.test
+*.out
 
-# Virtual environments
-.venv
+# Local scratch / editor
 /scratch/
-/prices/source_prices/
 .claude/
-.coverage
 TODO.md
-node_modules/
+.idea/
 
 # macOS system files
 .DS_Store
-packages/js/.genai-prices-cache.json
-.idea/

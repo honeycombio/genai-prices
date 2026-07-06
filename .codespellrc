@@ -1,0 +1,3 @@
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+[codespell]
+skip = prices/data.json,prices/data_slim.json,prices/data.schema.json,prices/data_slim.schema.json,packages/go/data.json
