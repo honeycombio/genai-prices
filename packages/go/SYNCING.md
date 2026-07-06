@@ -71,7 +71,7 @@ make lint test   # gofmt + go vet + go test
 ```bash
 $EDITOR upstream-watch/requirements.txt   # genai-prices==<new-version>
 git commit -am "sync: bump genai-prices to $NEW"
-git push -u origin yingrong/sync-upstream-$NEW
+git push -u origin sync-upstream-$NEW
 gh pr create --base main --title "sync: pull upstream v$NEW price data" --body "..."
 ```
 
