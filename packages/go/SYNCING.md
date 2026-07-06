@@ -26,7 +26,7 @@ Fetch the data files from the upstream release tag (same mechanism as
 
 ```bash
 NEW=<new-version>   # e.g. 0.0.67
-git switch -c yingrong/sync-upstream-$NEW main
+git switch -c sync-upstream-$NEW main
 
 for f in data.json data.schema.json data_slim.json data_slim.schema.json; do
   gh api "repos/pydantic/genai-prices/contents/prices/$f?ref=v$NEW" \
