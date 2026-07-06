@@ -91,5 +91,5 @@ calc, _ := genaiprices.CalcPrice(extracted.Usage, extracted.Model.ID,
 - Prices use `float64`, matching the JavaScript engine.
 - Tiered pricing is threshold-based (cliff): crossing a tier applies that rate to
   all tokens of that bucket.
-- `data.json` is generated — DO NOT edit it directly. It is refreshed from
-  `prices/data.json` by `make package-data`.
+- `data.json` is generated — DO NOT edit it directly. It is a copy of
+  `prices/data.json` at the repo root and must be kept in sync with it.
