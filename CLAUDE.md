@@ -36,7 +36,7 @@ repository — the build pipeline lives upstream.
 - `packages/go/data.json` must be kept in sync with `prices/data.json` (it is a copy embedded by
   the Go package).
 - Upstream releases are detected by a Dependabot watch on
-  `.github/upstream-watch/requirements.txt` (see the maintainer note in `README.md`). A PR
+  `upstream-watch/requirements.txt` (see the maintainer note in `README.md`). A PR
   labelled `upstream-release` is the signal to refresh the price data and, if the schema or
   pricing logic changed, update the Go implementation to match.
 
