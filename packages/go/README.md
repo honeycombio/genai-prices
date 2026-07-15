@@ -71,6 +71,21 @@ custom := &genaiprices.Provider{
 calc, err := genaiprices.CalcPrice(usage, "my-model", genaiprices.WithProvider(custom))
 ```
 
+### Record provenance
+
+For telemetry that stamps where a cost estimate came from:
+
+```go
+genaiprices.Name        // "genai-prices" — the library identifier
+genaiprices.DataSource  // "pydantic/genai-prices" — upstream the catalog is synced from
+genaiprices.Version     // e.g. "0.0.1" — this library's release version
+```
+
+`Version` is *this* library's release version, not the upstream data version —
+the two are deliberately decoupled (we can ship engine changes without a data
+sync, or sync data without a release). The exact upstream catalog version last
+synced is recorded in `upstream-watch/requirements.txt`.
+
 ### Extract usage from an API response
 
 ```go
