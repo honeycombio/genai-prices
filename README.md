@@ -4,9 +4,8 @@
 > `upstream-release` against `upstream-watch/requirements.txt` signals a new
 > [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) release. When handling
 > it, refresh the bundled price data (`prices/data.json`, `prices/data_slim.json` and their
-> schemas) and the embedded copy in `packages/go/`, checking whether `prices/data.schema.json`
-> changed or upstream shipped bug fixes — if so, the Go implementation in `packages/go/` must
-> be updated to match before merging.
+> schemas), checking whether `prices/data.schema.json` changed or upstream shipped bug fixes —
+> if so, the Go implementation must be updated to match before merging.
 
 <!-- fork-note:end -->
 
@@ -32,11 +31,37 @@ packages that live upstream are not maintained here.
 
 ## Usage
 
-See the [Go README](packages/go/README.md) for instructions on how to install and use the Go package.
+```bash
+go get github.com/honeycombio/genai-prices
+```
 
 ```go
-import genaiprices "github.com/honeycombio/genai-prices/packages/go"
+import genaiprices "github.com/honeycombio/genai-prices"
+
+usage := genaiprices.Usage{InputTokens: 1000, OutputTokens: 100}
+
+calc, err := genaiprices.CalcPrice(usage, "gpt-4o-mini",
+    genaiprices.WithProviderID("openai"))
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("$%.6f (input $%.6f, output $%.6f) — %s / %s\n",
+    calc.TotalPrice, calc.InputPrice, calc.OutputPrice,
+    calc.Provider.Name, calc.Model.Name)
 ```
+
+Provide `WithProviderID` (or `WithProviderAPIURL`) when you know the provider for the most
+reliable matching. See [pkg.go.dev](https://pkg.go.dev/github.com/honeycombio/genai-prices) for
+the full API — custom/unpublished providers, extracting usage from a raw API response, and
+provenance constants (`Name`, `DataSource`, `Version`) for stamping telemetry.
+
+Notes:
+
+- Prices use `float64`, matching the upstream [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) JavaScript implementation.
+- Tiered pricing is threshold-based (cliff): crossing a tier applies that rate to
+  all tokens of that bucket.
+- `prices/data.json` is generated — DO NOT edit it directly.
 
 ## Price data
 
@@ -48,7 +73,7 @@ time (`//go:embed`). The following files are available:
 - [`prices/data_slim.json`](prices/data_slim.json) - JSON file with long fields like descriptions removed and free models removed
 - [`prices/data_slim.schema.json`](prices/data_slim.schema.json) - JSON Schema for `prices/data_slim.json`
 
-`packages/go/data.json` is a copy of `prices/data.json` embedded by the Go package.
+`prices/data.json` is embedded directly by the Go package (`data_slim.json` is not used).
 
 These files are sourced from upstream [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices);
 see the maintainer note above for how updates flow in via Dependabot.

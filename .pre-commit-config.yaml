@@ -34,13 +34,13 @@ repos:
     hooks:
       - id: go-fmt
         name: go fmt
-        entry: bash -c 'cd packages/go && test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)'
+        entry: bash -c 'test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)'
         language: system
-        files: ^packages/go/.*\.go$
+        files: \.go$
         pass_filenames: false
       - id: go-vet
         name: go vet
-        entry: bash -c 'cd packages/go && go vet ./...'
+        entry: bash -c 'go vet ./...'
         language: system
-        files: ^packages/go/.*\.go$
+        files: \.go$
         pass_filenames: false

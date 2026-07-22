@@ -3,7 +3,7 @@ package genaiprices_test
 import (
 	"testing"
 
-	genaiprices "github.com/honeycombio/genai-prices/packages/go"
+	genaiprices "github.com/honeycombio/genai-prices"
 )
 
 // TestSmoke confirms the package is vendored and wired correctly: the embedded

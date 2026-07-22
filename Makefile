@@ -1,7 +1,5 @@
 .DEFAULT_GOAL := all
 
-GO_DIR := packages/go
-
 .PHONY: .pre-commit
 .pre-commit: ## Check that pre-commit is installed
 	@pre-commit -V || echo 'Please install pre-commit: https://pre-commit.com/'
@@ -12,20 +10,20 @@ install: .pre-commit ## Install pre-commit hooks for local development
 
 .PHONY: format
 format: ## Format the Go code
-	cd $(GO_DIR) && gofmt -w .
+	gofmt -w .
 
 .PHONY: lint
 lint: ## Check Go formatting and run go vet
-	@test -z "$$(cd $(GO_DIR) && gofmt -l .)" || (echo 'gofmt needs to be run, see: make format' && cd $(GO_DIR) && gofmt -l . && exit 1)
-	cd $(GO_DIR) && go vet ./...
+	@test -z "$$(gofmt -l .)" || (echo 'gofmt needs to be run, see: make format' && gofmt -l . && exit 1)
+	go vet ./...
 
 .PHONY: build
 build: ## Build the Go package
-	cd $(GO_DIR) && go build ./...
+	go build ./...
 
 .PHONY: test
 test: ## Run the Go tests
-	cd $(GO_DIR) && go test ./...
+	go test ./...
 
 .PHONY: all
 all: format lint build test ## Format, lint, build, and test
