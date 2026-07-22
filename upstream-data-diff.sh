@@ -47,7 +47,7 @@ else
   if [[ $diff_exit -eq 0 ]]; then
     report+="✅ **No schema change.**"$'\n'
   elif [[ $diff_exit -eq 1 ]]; then
-    report+="⚠️ **Schema changed — the Go implementation in \`packages/go/\` likely needs updating.**"$'\n'
+    report+="⚠️ **Schema changed — the Go implementation likely needs updating.**"$'\n'
   else
     build_err="diff exited $diff_exit"
   fi

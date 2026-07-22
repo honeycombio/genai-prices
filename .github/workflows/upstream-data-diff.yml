@@ -4,7 +4,7 @@ name: Upstream data diff
 # upstream-watch/requirements.txt), diff prices/data.schema.json between the
 # current version and the new upstream version and post the result as a PR
 # comment, so a maintainer can see at a glance whether a schema change requires
-# updating the Go implementation in packages/go/.
+# updating the Go implementation.
 #
 # pull_request_target is required because Dependabot-triggered workflows get a
 # read-only token with no write access; we never check out or run PR-head code
@@ -58,4 +58,4 @@ jobs:
           fi
           args=("$NEW")
           [ -n "$PR" ] && args+=("$PR")
-          bash packages/go/upstream-data-diff.sh "${args[@]}"
+          bash upstream-data-diff.sh "${args[@]}"

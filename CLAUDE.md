@@ -11,15 +11,15 @@ Python and JavaScript/TypeScript implementations that live in
 
 The repository contains:
 
-- **Go Package** (`packages/go/`): the library for calculating costs, published as
-  `github.com/honeycombio/genai-prices/packages/go`
+- **Go Package** (repo root): the library for calculating costs, published as
+  `github.com/honeycombio/genai-prices`
 - **Price Data** (`prices/`): the compiled price catalog and JSON Schemas the Go package embeds
 
 ## Architecture
 
 ### Key Directories
 
-- `packages/go/`: the Go package
+- repo root: the Go package
   - `genaiprices.go`, `engine.go`, `match.go`, `extract.go`, `types.go`: implementation
   - `data.go`: embeds `data.json` via `//go:embed`
   - `data.json`: a copy of `prices/data.json`, embedded at compile time (DO NOT EDIT directly)
@@ -32,8 +32,8 @@ The repository contains:
 The price data is sourced from upstream `pydantic/genai-prices` and is **not** built in this
 repository — the build pipeline lives upstream.
 
-- **NEVER** edit `prices/data.json`, `prices/data_slim.json`, or `packages/go/data.json` by hand.
-- `packages/go/data.json` must be kept in sync with `prices/data.json` (it is a copy embedded by
+- **NEVER** edit `prices/data.json`, `prices/data_slim.json`, or `data.json` by hand.
+- `data.json` must be kept in sync with `prices/data.json` (it is a copy embedded by
   the Go package).
 - Upstream releases are detected by a Dependabot watch on
   `upstream-watch/requirements.txt` (see the maintainer note in `README.md`). A PR
@@ -41,8 +41,6 @@ repository — the build pipeline lives upstream.
   pricing logic changed, update the Go implementation to match.
 
 ## Development Commands
-
-All commands operate on the Go package (see the `Makefile`):
 
 ```bash
 make build   # go build ./...
@@ -52,10 +50,9 @@ make format  # gofmt -w
 make install # install pre-commit hooks
 ```
 
-Or run Go tooling directly from `packages/go/`:
+Or run Go tooling directly:
 
 ```bash
-cd packages/go
 go build ./...
 go test ./...
 go vet ./...
@@ -64,6 +61,6 @@ go vet ./...
 ## Code Style
 
 - Format Go code with `gofmt` (enforced in CI and via pre-commit).
-- Follow existing patterns in the `packages/go/` codebase.
+- Follow existing patterns in the codebase.
 - Generic pre-commit hooks (YAML/TOML checks, codespell, zizmor, whitespace) run repo-wide;
   codespell config is in `.codespellrc`.
