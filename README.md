@@ -4,9 +4,8 @@
 > `upstream-release` against `upstream-watch/requirements.txt` signals a new
 > [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) release. When handling
 > it, refresh the bundled price data (`prices/data.json`, `prices/data_slim.json` and their
-> schemas) and the embedded copy `data.json`, checking whether `prices/data.schema.json`
-> changed or upstream shipped bug fixes — if so, the Go implementation must
-> be updated to match before merging.
+> schemas), checking whether `prices/data.schema.json` changed or upstream shipped bug fixes —
+> if so, the Go implementation must be updated to match before merging.
 
 <!-- fork-note:end -->
 
@@ -62,8 +61,7 @@ Notes:
 - Prices use `float64`, matching the JavaScript engine.
 - Tiered pricing is threshold-based (cliff): crossing a tier applies that rate to
   all tokens of that bucket.
-- `data.json` is generated — DO NOT edit it directly. It is a copy of
-  `prices/data.json` at the repo root and must be kept in sync with it.
+- `prices/data.json` is generated — DO NOT edit it directly.
 
 ## Price data
 
@@ -75,7 +73,7 @@ time (`//go:embed`). The following files are available:
 - [`prices/data_slim.json`](prices/data_slim.json) - JSON file with long fields like descriptions removed and free models removed
 - [`prices/data_slim.schema.json`](prices/data_slim.schema.json) - JSON Schema for `prices/data_slim.json`
 
-`data.json` is a copy of `prices/data.json` embedded by the Go package.
+`prices/data.json` is embedded directly by the Go package (`data_slim.json` is not used).
 
 These files are sourced from upstream [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices);
 see the maintainer note above for how updates flow in via Dependabot.

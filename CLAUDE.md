@@ -21,10 +21,10 @@ The repository contains:
 
 - repo root: the Go package
   - `genaiprices.go`, `engine.go`, `match.go`, `extract.go`, `types.go`: implementation
-  - `data.go`: embeds `data.json` via `//go:embed`
-  - `data.json`: a copy of `prices/data.json`, embedded at compile time (DO NOT EDIT directly)
+  - `data.go`: embeds `prices/data.json` directly via `//go:embed`
 - `prices/`: the bundled price data
-  - `data.json` / `data_slim.json`: compiled price catalogs (DO NOT EDIT directly)
+  - `data.json` / `data_slim.json`: compiled price catalogs (DO NOT EDIT directly); only
+    `data.json` is used by the Go package
   - `data.schema.json` / `data_slim.schema.json`: JSON Schemas for the above
 
 ## Price Data
@@ -32,9 +32,7 @@ The repository contains:
 The price data is sourced from upstream `pydantic/genai-prices` and is **not** built in this
 repository — the build pipeline lives upstream.
 
-- **NEVER** edit `prices/data.json`, `prices/data_slim.json`, or `data.json` by hand.
-- `data.json` must be kept in sync with `prices/data.json` (it is a copy embedded by
-  the Go package).
+- **NEVER** edit `prices/data.json` or `prices/data_slim.json` by hand.
 - Upstream releases are detected by a Dependabot watch on
   `upstream-watch/requirements.txt` (see the maintainer note in `README.md`). A PR
   labelled `upstream-release` is the signal to refresh the price data and, if the schema or
