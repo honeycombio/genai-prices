@@ -58,7 +58,7 @@ provenance constants (`Name`, `DataSource`, `Version`) for stamping telemetry.
 
 Notes:
 
-- Prices use `float64`, matching the JavaScript engine.
+- Prices use `float64`, matching the upstream [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) JavaScript implementation.
 - Tiered pricing is threshold-based (cliff): crossing a tier applies that rate to
   all tokens of that bucket.
 - `prices/data.json` is generated — DO NOT edit it directly.
