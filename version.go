@@ -13,4 +13,4 @@ const DataSource = "pydantic/genai-prices"
 // library's releases, which are deliberately not 1:1 with upstream
 // pydantic/genai-prices data syncs: we can ship engine changes without a data
 // bump, or sync data without a code release. Bump it when cutting a release.
-const Version = "0.0.1"
+const Version = "0.0.2"

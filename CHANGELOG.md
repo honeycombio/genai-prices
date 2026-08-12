@@ -6,6 +6,18 @@
 
 ### Maintenance
 
+## 0.0.2
+
+### Enhancements
+
+- sync: pull upstream v0.1.1 price data, adding newly supported models (#22) | @VinozzZ
+
+### Maintenance
+
+- ci: add release process (CHANGELOG, RELEASING.md, tag-triggered draft release) (#15) | @VinozzZ
+- build: move Go module to repo root (#17) | @VinozzZ
+- sync: bump genai-prices from 0.0.71 to 0.0.72 in /upstream-watch (#18) | @dependabot
+
 ## 0.0.1
 
 ### Enhancements
