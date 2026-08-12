@@ -1,5 +1,11 @@
 # genai-prices Changelog
 
+## Unreleased
+
+### Enhancements
+
+### Maintenance
+
 ## 0.0.1
 
 ### Enhancements

@@ -1,4 +1,6 @@
-# Syncing price data from upstream
+# Development
+
+## Syncing price data from upstream
 
 `honeycombio/genai-prices` is a standalone Go library. It is **not** maintained as a fork
 of [`pydantic/genai-prices`](https://github.com/pydantic/genai-prices) — the Go
@@ -11,7 +13,7 @@ price data files and their schemas:
 
 We never hand-edit these; the build pipeline that produces them lives upstream.
 
-## 0. Get notified
+### 0. Get notified
 
 [`upstream-watch/requirements.txt`](upstream-watch/requirements.txt) pins the last
 upstream version we synced to. Dependabot checks it daily and opens a PR labelled
@@ -19,7 +21,7 @@ upstream version we synced to. Dependabot checks it daily and opens a PR labelle
 comments on that PR with whether `prices/data.schema.json` changed — a schema change means
 the Go structs below likely need updating.
 
-## 1. Pull the refreshed data
+### 1. Pull the refreshed data
 
 Fetch the data files from the upstream release tag (same mechanism as
 [`upstream-data-diff.sh`](upstream-data-diff.sh)) on a branch:
@@ -37,7 +39,7 @@ git add prices/
 git commit -m "sync: refresh price data from upstream v$NEW"
 ```
 
-## 2. Check for schema drift
+### 2. Check for schema drift
 
 The Dependabot PR comment (step 0) already told you whether `prices/data.schema.json`
 changed. Confirm locally:
@@ -59,13 +61,13 @@ instead: `init()` in `data.go` panics, and the custom `UnmarshalJSON` in `match.
 rejects unknown match operators. Only silent additive/rename drift needs the manual check
 above.
 
-## 3. Verify
+### 3. Verify
 
 ```bash
 make lint test   # gofmt + go vet + go test
 ```
 
-## 4. Bump the tracked version and open a PR
+### 4. Bump the tracked version and open a PR
 
 ```bash
 $EDITOR upstream-watch/requirements.txt   # genai-prices==<new-version>
@@ -76,3 +78,18 @@ gh pr create --base main --title "sync: pull upstream v$NEW price data" --body "
 
 Merge normally once approved. Bumping the pin stops Dependabot from re-flagging the
 version you just synced, and closes its `upstream-release` PR.
+
+## Changelog
+
+`CHANGELOG.md` has an `## Unreleased` section at the top, with empty `### Enhancements` /
+`### Maintenance` subheadings.
+
+- When you open a PR with a user-facing change, add a one-line entry under the matching
+  subheading in `Unreleased`, in the same style as released entries:
+  `- <type>: <description> (#<pr>) | @<author>`.
+- Skip this for changes with no user-facing effect (docs, CI tweaks, refactors).
+- At release time, rename `Unreleased` to the new version number and add fresh empty
+  `Unreleased` / `Enhancements` / `Maintenance` sections above it — see `RELEASING.md`.
+
+This spreads changelog-writing across PRs instead of reconstructing it from git history at
+release time.
