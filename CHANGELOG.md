@@ -17,6 +17,7 @@
 - ci: add release process (CHANGELOG, RELEASING.md, tag-triggered draft release) (#15) | @VinozzZ
 - build: move Go module to repo root (#17) | @VinozzZ
 - sync: bump genai-prices from 0.0.71 to 0.0.72 in /upstream-watch (#18) | @dependabot
+- docs: add DEVELOPMENT.md, merge SYNCING.md, add Unreleased changelog section (#23) | @VinozzZ
 
 ## 0.0.1
 
