@@ -15,4 +15,3 @@
 - ci: run data.schema.json diff when dependabot detects a new upstream release (#7) | @VinozzZ
 - sync: bump genai-prices from 0.0.66 to 0.0.71 in /upstream-watch (#13) | @dependabot
 - sync: pull upstream v0.0.71 price data (#14) | @VinozzZ
-- sync: bump genai-prices from 0.0.72 to 0.1.1 and pull upstream price data | @Yingrong
