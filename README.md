@@ -1,3 +1,11 @@
+
+⚠️ Pydantic has a official Go library: https://github.com/pydantic/genai-prices/tree/main/packages/go ⚠️
+
+This repo is archived and no longer actively maintained.
+
+---
+
+
 <!-- fork-note:start -->
 
 > **Maintainers — upstream sync via Dependabot.** A Dependabot PR labelled
